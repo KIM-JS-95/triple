@@ -33,9 +33,9 @@ public class Review {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private List<Photo> photos = new ArrayList<>();
 
-//    @OneToOne(orphanRemoval = true)
-//    @JoinColumn(name = "PLACE_ID")
-//    private Place place;
+    @OneToOne(orphanRemoval = true)
+    @JoinColumn(name = "PLACE_ID")
+    private Place place;
 
 
     public void addPhoto(Photo photo) {
@@ -43,8 +43,8 @@ public class Review {
         photo.setReview(this);
     }
 
-//    public void setPlace(Place place) {
-//        this.place = place;
-//    }
+    public void setPlace(Place place) {
+        this.place = place;
+    }
 
 }

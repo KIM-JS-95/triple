@@ -151,12 +151,14 @@ class TripleServiceTest {
                 .id(user_UUID)
                 .build();
 
-        //Place mockplace = placeRepository.findById(place_UUID).orElseThrow();
+        Place mockplace = Place.builder()
+                .id(place_UUID)
+                .build();
 
-        System.out.println(mockuser.getId());
+
 
         //TODO; 리뷰 작성 후 저장
-        if (mockuser != null) {
+        if (mockuser != null && mockplace != null) {
 
             Review mockreview = Review.builder()
                     .id(review_UUID)
@@ -166,32 +168,30 @@ class TripleServiceTest {
             mockuser.addReiew(mockreview);
             mockreview.setUser(mockuser);
 
-//            mockreview.setPlace(mockplace);
-//            mockplace.setReview(mockreview);
-
-//            userRepository.save(mockuser);
+            mockreview.setPlace(mockplace);
+            mockplace.setReview(mockreview);
 
             //TODO: 이미지 저장
-//            for (String s : photo) {
-//                UUID photo_UUID = UUID.fromString(s);
-//
-//                Photo mockphoto = Photo.builder()
-//                        .attachedPhotoIds(photo_UUID)
-//                        .review(mockreview)
-//                        .build();
-//
-//                mockphoto.setReview(mockreview);
-//                mockreview.addPhoto(mockphoto);
-//
-//                photoRepository.save(mockphoto);
-//            }
+            for (String s : photo) {
+                UUID photo_UUID = UUID.fromString(s);
 
+                Photo mockphoto = Photo.builder()
+                        .attachedPhotoIds(photo_UUID)
+                        .review(mockreview)
+                        .build();
+
+                mockphoto.setReview(mockreview);
+                mockreview.addPhoto(mockphoto);
+
+                photoRepository.save(mockphoto);
+            }
+
+            assertThat(mockreview.getPlace().getId(), is(place_UUID));
             reviewRepository.save(mockreview);
         }
 
-//        Review review_assrt = reviewRepository.findById(review_UUID).orElseThrow();
-//
-//        assertThat(review_assrt.getPlace().getId(), is(place_UUID));
+        //TODO: 포토 체크
+        assertThat(mockuser.getReviews().get(0).getId(), is(review_UUID));
 
 
     }

@@ -21,10 +21,10 @@ public class Place {
     @Column(name = "PLACE_ID", columnDefinition = "BINARY(16)")
     private UUID id;
 
-//    @OneToOne(mappedBy = "place", fetch = FetchType.LAZY)
-//    private Review review;
+    @OneToOne(mappedBy = "place", fetch = FetchType.LAZY)
+    private Review review;
 
-//    public void setReview(Review review) {
-//        this.review = review;
-//    }
+    public void setReview(Review review) {
+        this.review = review;
+    }
 }
