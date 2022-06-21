@@ -30,16 +30,21 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Review> reviews = new ArrayList<>();
 
-//
+
 //    @Builder.Default
-//    @OneToMany(mappedBy = "user")
+//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
 //    private List<Place> places= new ArrayList<>();
-//
+
 
     // what: 리뷰 저장 시 자동 매핑
     public void addReiew(Review review) {
         this.reviews.add(review);
         review.setUser(this);
     }
+
+//    public void addPlace(Place place) {
+//        this.places.add(place);
+//        place.setUser(this);
+//    }
 
 }

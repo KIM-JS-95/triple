@@ -3,7 +3,6 @@ package com.tripple.entity;
 
 import com.sun.istack.NotNull;
 import lombok.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -22,18 +21,19 @@ public class Review {
     @Column(name = "REVIEW_ID", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @NotNull
     private String content;
 
     @ManyToOne
     @JoinColumn(name = "USER_ID")
     private User user;
 
+    private String rating;
+
     @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private List<Photo> photos = new ArrayList<>();
 
-    @OneToOne(orphanRemoval = true)
+    @OneToOne
     @JoinColumn(name = "PLACE_ID")
     private Place place;
 
