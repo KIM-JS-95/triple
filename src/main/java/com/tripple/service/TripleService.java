@@ -38,35 +38,51 @@ public class TripleService {
          - 보너스
             - 특정 장소에 첫 리뷰
     */
+    public boolean add(EventDTO dto) {
 
-    public void add(EventDTO dto) {
         String user = dto.getUserid();
         String review = dto.getReviewid();
         String place = dto.getPlaceid();
+        String content = dto.getContent();
+        String[] photo = dto.getAttachedPhotoIds();
 
         UUID user_UUID = UUID.fromString(user);
         UUID review_UUID = UUID.fromString(review);
         UUID place_UUID = UUID.fromString(place);
 
-        User mockuser = userRepository.findById(user_UUID).orElseThrow();
-        Place mockplace = placeRepository.findById(place_UUID).orElseThrow();
+        User find_user = userRepository.findById(user_UUID).orElseThrow();
+        Place find_place = placeRepository.findById(place_UUID).orElseThrow();
 
-        String[] photo = dto.getAttachedPhotoIds();
+        Long find_place_count = placeRepository.count();
 
-        if (mockuser != null && mockplace != null) {
 
-            Review mockreview = Review.builder()
+        int point=0;
+        int photo_size = photo.length;
+        /*
+        최초 리뷰일 경우 보너스 점수 부여
+         */
+        if(find_place_count == 0L){
+            point++;
+        }
+        if (photo_size>=1 && content.length()>=1){
+            point +=2;
+        }else if(photo_size>=1 || content.length()>=1){
+            point ++;
+        }
+
+        if (find_user != null && find_place != null) {
+
+            Review find_review = Review.builder()
                     .id(review_UUID)
-                    .content("좋아요!")
+                    .content(content)
                     .build();
 
-            mockuser.addReiew(mockreview);
-            mockreview.setUser(mockuser);
+            find_user.addReiew(find_review);
+            find_review.setUser(find_user);
+            find_review.setPlace(find_place);
+            find_place.setReview(find_review);
 
-            mockreview.setPlace(mockplace);
-            mockplace.setReview(mockreview);
-
-            reviewRepository.save(mockreview);
+            reviewRepository.save(find_review);
 
             //TODO: 이미지 저장
             for (String s : photo) {
@@ -76,13 +92,17 @@ public class TripleService {
                         .attachedPhotoIds(photo_UUID)
                         .build();
 
-                mockphoto.setReview(mockreview);
-                mockreview.addPhoto(mockphoto);
+                mockphoto.setReview(find_review);
+                find_review.addPhoto(mockphoto);
 
                 photoRepository.save(mockphoto);
             }
 
+            find_user.setPoint(point);
+            userRepository.save(find_user);
         }
+
+        return true;
 
     }
 
@@ -107,16 +127,31 @@ public class TripleService {
         String user = dto.getUserid();
         String review = dto.getReviewid();
         String place = dto.getPlaceid();
+
+        UUID uuid_user = UUID.fromString(user);
         UUID uuid_review = UUID.fromString(review);
         UUID uuid_place = UUID.fromString(place);
 
+        Review find_review = reviewRepository.findById(uuid_review).orElseThrow();
+        User find_user = userRepository.findById(uuid_user).orElseThrow();
 
-        Review review1 = reviewRepository.findByid(uuid_review);
+        int photo_size = find_review.getPhotos().size();
+        int content_size = find_review.getContent().length();
+        String rating = find_review.getRating();
+        int user_point  = find_user.getPoint();
 
+        if (photo_size>=1 && content_size>=1){
+            user_point -= 2;
+        }else if(photo_size>=1 || content_size>=1){
+            user_point--;
+        }
 
+        if(rating == "first"){
+            user_point--;
+        }
 
-
-        reviewRepository.deleteById(uuid_review);
+        reviewRepository.delete(find_review);
+        find_user.setPoint(user_point);
 
         return true;
 

@@ -5,12 +5,10 @@ import com.tripple.repository.PhotoRepository;
 import com.tripple.repository.PlaceRepository;
 import com.tripple.repository.ReviewRepository;
 import com.tripple.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,28 +35,6 @@ class TripleServiceTest {
     @Autowired
     private PhotoRepository photoRepository;
 
-    @BeforeEach
-    public void addUser() {
-        System.out.println("Before!!!");
-
-        var user = "3ede0ef2-92b7-4817-a5f3-0c575361f745";
-        String place = "2e4baf1c-5acb-4efb-a1af-eddada31b00f";
-
-        UUID user__UUID = UUID.fromString(user);
-        UUID place__UUID = UUID.fromString(place);
-
-        User mockuser = User.builder()
-                .id(user__UUID)
-                .build();
-
-        Place mockplace = Place.builder()
-                .id(place__UUID)
-                .build();
-
-        userRepository.save(mockuser);
-        placeRepository.save(mockplace);
-    }
-
 
     //TODO: 신규 유저 저장 & 장소 저장
     @Test
@@ -73,7 +49,6 @@ class TripleServiceTest {
         UUID user__UUID = UUID.fromString(user);
         UUID place__UUID = UUID.fromString(place);
 
-
         User mockuser = User.builder()
                 .id(user__UUID)
                 .build();
@@ -85,46 +60,11 @@ class TripleServiceTest {
         userRepository.save(mockuser);
         placeRepository.save(mockplace);
 
-
         User u1 = userRepository.findById(user__UUID).orElseThrow();
-
 
         assertThat(u1.getId().toString(), is(user));
     }
 
-    // TODO: 장소 저장 장소가 없다면 자동으로 저장되는 기능 추가
-//    @Test
-//    @DisplayName("place_Test")
-//    public void User_place() {
-//
-//        var user = "3ede0ef2-92b7-4817-a5f3-0c575361f745";
-//        var place = "2e4baf1c-5acb-4efb-a1af-eddada31b00f";
-//
-//        UUID userId = UUID.fromString(user);
-//        UUID placeId = UUID.fromString(place);
-//
-//
-//        // what: 유저 정보 불러오기
-//        User mockuser = userRepository.findById(userId).orElseThrow();
-//
-//
-//        Place mockplace = Place.builder()
-//                .place(placeId)
-//                .user(mockuser)
-//                .build();
-//
-//        // what: place 정보 저장
-//        placeRepository.save(mockplace);
-//
-//        User mock = userRepository.findByUserId(userId);
-//        System.out.println(mock.getUserId());
-//        String user_UUID = mock.getUserId().toString();
-//
-//        assertThat(user_UUID, is(user));
-//
-//    }
-//
-//
     // TODO: 리뷰 저장
     @Test
     @DisplayName("photo_Test")
@@ -133,11 +73,10 @@ class TripleServiceTest {
         var user = "3ede0ef2-92b7-4817-a5f3-0c575361f745";
         var review = "240a0658-dc5f-4878-9381-ebb7b2667772";
         String place = "2e4baf1c-5acb-4efb-a1af-eddada31b00f";
-
         String[] photo = {"e4d1a64e-a531-46de-88d0-ff0ed70c0bb8"
                 , "afb0cef2-851d-4a50-bb07-9cc15cbdc332"};
 
-        String contenxt = "좋아요!";
+        String content = "좋아요!";
         // TODO: 리뷰와 동시에 저장
 
         UUID user_UUID = UUID.fromString(user);
@@ -162,23 +101,25 @@ class TripleServiceTest {
         int point=0;
         int photo_size = photo.length;
 
-        if (photo_size>=1 && contenxt.length()>=1){
+        if (photo_size>=1 && content.length()>=1){
             point +=2;
-        }else if(photo_size>=1 || contenxt.length()>=1){
+        }else if(photo_size>=1 || content.length()>=1){
             point ++;
         }
         int visited = reviewRepository.countByPlaceId(place_UUID);
+        Review mockreview = Review.builder()
+                .id(review_UUID)
+                .content(content)
+                .build();
         if(visited == 0){
             point++;
+            mockreview.setRating("first");
         }
 
         //TODO; 리뷰 작성 후 저장
         if (mockuser != null && mockplace != null) {
 
-            Review mockreview = Review.builder()
-                    .id(review_UUID)
-                    .content(contenxt)
-                    .build();
+
 
             mockuser.addReiew(mockreview);
             mockreview.setUser(mockuser);
@@ -215,10 +156,6 @@ class TripleServiceTest {
         assertThat(mockuser.getReviews().get(0).getId(), is(review_UUID));
 
     }
-
-//
-//    @Autowired
-//    private TripleService tripleService;
 
     @Test
     @DisplayName("delete_Test")
@@ -295,5 +232,28 @@ class TripleServiceTest {
 
         assertThat(mockuser.getPoint(), is(0));
 
+    }
+
+
+    /*
+    해당 유저의 리뷰를 조회 후 사진 및 수정 기능 추가
+     */
+    @Test
+    public void mod(){
+
+        var user = "3ede0ef2-92b7-4817-a5f3-0c575361f745";
+        var review = "240a0658-dc5f-4878-9381-ebb7b2667772";
+        UUID user_UUID = UUID.fromString(user);
+        UUID review_UUID = UUID.fromString(review);
+
+        Review mockuser = reviewRepository.findByIdAndUserId(review_UUID, user_UUID);
+
+        mockuser.setContent("midify content");
+        mockuser.setRating("first");
+        reviewRepository.save(mockuser);
+
+        Review mockreview = reviewRepository.findById(review_UUID).orElseThrow();
+        assertThat(mockreview.getContent(), is("midify content"));
+        assertThat(mockreview.getRating(), is("first"));
     }
 }
