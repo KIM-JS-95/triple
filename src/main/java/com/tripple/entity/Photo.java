@@ -18,7 +18,7 @@ public class Photo {
     @Column(name = "ATTACHEDPHOTO", columnDefinition = "BINARY(16)")
     private UUID attachedPhotoIds;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "REVIEW_ID")
     private Review review;
 

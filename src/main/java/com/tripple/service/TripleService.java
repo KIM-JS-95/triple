@@ -1,10 +1,7 @@
 package com.tripple.service;
 
 import com.tripple.entity.*;
-import com.tripple.repository.PhotoRepository;
-import com.tripple.repository.PlaceRepository;
-import com.tripple.repository.ReviewRepository;
-import com.tripple.repository.UserRepository;
+import com.tripple.repository.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+@Transactional
 @Service
 public class TripleService {
 
@@ -26,6 +24,8 @@ public class TripleService {
 
     @Autowired
     private PlaceRepository placeRepository;
+    @Autowired
+    private LogRepository logRepository;
 
 
     /*
@@ -40,67 +40,64 @@ public class TripleService {
     */
     public boolean add(EventDTO dto) {
 
-        String user = dto.getUserid();
-        String review = dto.getReviewid();
-        String place = dto.getPlaceid();
-        String content = dto.getContent();
-        String[] photo = dto.getAttachedPhotoIds();
-
-        UUID user_UUID = UUID.fromString(user);
-        UUID review_UUID = UUID.fromString(review);
-        UUID place_UUID = UUID.fromString(place);
-
-        User find_user = userRepository.findById(user_UUID).orElseThrow();
-        Place find_place = placeRepository.findById(place_UUID).orElseThrow();
-
+        User find_user = userRepository.findById(dto.getUserid()).orElseThrow();
+        Place find_place = placeRepository.findById(dto.getPlaceid()).orElseThrow();
+        Review find_review = reviewRepository.findByPlaceIdAndUserId(dto.getPlaceid(), dto.getUserid());
         Long find_place_count = placeRepository.count();
 
-
-        int point=0;
-        int photo_size = photo.length;
+        int point = 0;
+        int photo_size = dto.getAttachedPhotoIds().size();
         /*
         최초 리뷰일 경우 보너스 점수 부여
          */
-        if(find_place_count == 0L){
+        if (find_place_count == 0L) {
             point++;
         }
-        if (photo_size>=1 && content.length()>=1){
-            point +=2;
-        }else if(photo_size>=1 || content.length()>=1){
-            point ++;
+        if (photo_size >= 1 && dto.getContent().length() >= 1) {
+            point += 2;
+        } else if (photo_size >= 1 || dto.getContent().length() >= 1) {
+            point++;
         }
 
         if (find_user != null && find_place != null) {
+            if (find_review == null) {
 
-            Review find_review = Review.builder()
-                    .id(review_UUID)
-                    .content(content)
-                    .build();
-
-            find_user.addReiew(find_review);
-            find_review.setUser(find_user);
-            find_review.setPlace(find_place);
-            find_place.setReview(find_review);
-
-            reviewRepository.save(find_review);
-
-            //TODO: 이미지 저장
-            for (String s : photo) {
-                UUID photo_UUID = UUID.fromString(s);
-
-                Photo mockphoto = Photo.builder()
-                        .attachedPhotoIds(photo_UUID)
+                Review review = Review.builder()
+                        .id(dto.getReviewid())
+                        .content(dto.getContent())
                         .build();
 
-                mockphoto.setReview(find_review);
-                find_review.addPhoto(mockphoto);
+                find_user.addReiew(review);
+                review.setUser(find_user);
+                review.setPlace(find_place);
+                find_place.setReview(review);
 
-                photoRepository.save(mockphoto);
+                //TODO: 이미지 저장
+                for (UUID photo_UUID : dto.getAttachedPhotoIds()) {
+
+                    Photo mockphoto = Photo.builder()
+                            .attachedPhotoIds(photo_UUID)
+                            .build();
+
+                    mockphoto.setReview(review);
+                    review.addPhoto(mockphoto);
+
+                    photoRepository.save(mockphoto);
+                }
+                reviewRepository.save(review);
             }
-
-            find_user.setPoint(point);
-            userRepository.save(find_user);
         }
+
+        PointLog pointLog = PointLog.builder()
+                .point(point + "가 적립되셨습니다.")
+                .build();
+
+        find_user.setPoint(point);
+        find_user.addPointLog(pointLog);
+        pointLog.setUser(find_user);
+
+        userRepository.save(find_user);
+        logRepository.save(pointLog);
 
         return true;
 
@@ -112,9 +109,15 @@ public class TripleService {
          수정한 내용에 맞는 내용 점수를 계산하여 점수를 부여하거나 회수한다.
 
     */
-    public void mod(EventDTO dto) {
+    public boolean mod(EventDTO dto) {
 
 
+        Review mockuser = reviewRepository.findByIdAndUserId(dto.getReviewid(), dto.getUserid());
+
+        mockuser.setContent(dto.getContent());
+        reviewRepository.save(mockuser);
+
+        return true;
     }
 
     /*
@@ -122,38 +125,52 @@ public class TripleService {
          리뷰로 부여한 점수와 보너스 점수를 회수한다.
 
     */
-    @Transactional
+
     public boolean del(EventDTO dto) {
-        String user = dto.getUserid();
-        String review = dto.getReviewid();
-        String place = dto.getPlaceid();
 
-        UUID uuid_user = UUID.fromString(user);
-        UUID uuid_review = UUID.fromString(review);
-        UUID uuid_place = UUID.fromString(place);
+        Review find_review = reviewRepository.findById(dto.getReviewid()).orElseThrow();
+        User find_user = userRepository.findById(dto.getUserid()).orElseThrow();
 
-        Review find_review = reviewRepository.findById(uuid_review).orElseThrow();
-        User find_user = userRepository.findById(uuid_user).orElseThrow();
+        Optional<Review> review = reviewRepository.findById(dto.getReviewid());
 
-        int photo_size = find_review.getPhotos().size();
-        int content_size = find_review.getContent().length();
-        String rating = find_review.getRating();
-        int user_point  = find_user.getPoint();
+        if (!review.isEmpty()) {
+            reviewRepository.deleteById(dto.getReviewid());
 
-        if (photo_size>=1 && content_size>=1){
-            user_point -= 2;
-        }else if(photo_size>=1 || content_size>=1){
-            user_point--;
+            // 포인트 처리
+            int photo_size = find_review.getPhotos().size();
+            int content_size = find_review.getContent().length();
+
+            String rating = find_review.getRating();
+            int user_point = find_user.getPoint();
+
+            if (photo_size >= 1 && content_size >= 1) {
+                user_point -= 2;
+            } else if (photo_size >= 1 || content_size >= 1) {
+                user_point--;
+            }
+
+            if (rating == "first") {
+                user_point--;
+            }
+
+            if (user_point < 0) {
+                user_point = 0;
+            }
+
+            find_user.setPoint(user_point);
+
+            PointLog pointLog = PointLog.builder()
+                    .point(user_point + "가 차감되셨습니다.")
+                    .build();
+
+            find_user.addPointLog(pointLog);
+            pointLog.setUser(find_user);
+
+            userRepository.save(find_user);
+            logRepository.save(pointLog);
+            return true;
         }
-
-        if(rating == "first"){
-            user_point--;
-        }
-
-        reviewRepository.delete(find_review);
-        find_user.setPoint(user_point);
-
-        return true;
+        return false;
 
     }
 

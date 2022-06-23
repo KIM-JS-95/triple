@@ -4,6 +4,7 @@ package com.tripple.entity;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,15 +15,15 @@ public class EventDTO {
 
     private String type;
 
-    private String userid;
+    private UUID userid;
 
-    private String placeid;
+    private UUID placeid;
 
-    private String reviewid;
+    private UUID reviewid;
 
     private String content;
 
-    private String[] attachedPhotoIds;
+    private List<UUID> attachedPhotoIds;
 
 }
 

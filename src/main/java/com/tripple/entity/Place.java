@@ -21,16 +21,13 @@ public class Place {
     @Column(name = "PLACE_ID", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @OneToOne(mappedBy = "place", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "place")
     private Review review;
 
 //    @ManyToOne
 //    @JoinColumn(name = "PLACE_ID")
 //    private User user;
 
-    public void setReview(Review review) {
-        this.review = review;
-    }
 
 //    public void setUser(User user) {
 //        this.user = user;

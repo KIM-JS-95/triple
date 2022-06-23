@@ -30,10 +30,10 @@ public class Review {
     private String rating;
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "review", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Photo> photos = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "PLACE_ID")
     private Place place;
 
@@ -41,10 +41,6 @@ public class Review {
     public void addPhoto(Photo photo) {
         this.photos.add(photo);
         photo.setReview(this);
-    }
-
-    public void setPlace(Place place) {
-        this.place = place;
     }
 
 }
