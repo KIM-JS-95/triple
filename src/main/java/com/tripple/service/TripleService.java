@@ -41,8 +41,8 @@ public class TripleService {
     public boolean add(EventDTO dto) {
 
         User find_user = userRepository.findById(dto.getUserid()).orElseThrow();
-        Place find_place = placeRepository.findById(dto.getPlaceid()).orElseThrow();
         Review find_review = reviewRepository.findByPlaceIdAndUserId(dto.getPlaceid(), dto.getUserid());
+        Place find_place = placeRepository.findById(dto.getPlaceid()).orElseThrow();
         Long find_place_count = placeRepository.count();
 
         int point = 0;
@@ -70,7 +70,7 @@ public class TripleService {
                 find_user.addReiew(review);
                 review.setUser(find_user);
                 review.setPlace(find_place);
-                find_place.setReview(review);
+                //find_place.setReviews(review);
 
                 //TODO: 이미지 저장
                 for (UUID photo_UUID : dto.getAttachedPhotoIds()) {
@@ -91,14 +91,11 @@ public class TripleService {
         PointLog pointLog = PointLog.builder()
                 .point(point + "가 적립되셨습니다.")
                 .build();
-
         find_user.setPoint(point);
         find_user.addPointLog(pointLog);
         pointLog.setUser(find_user);
-
         userRepository.save(find_user);
         logRepository.save(pointLog);
-
         return true;
 
     }
@@ -107,7 +104,7 @@ public class TripleService {
     /*
        TODO:  mod 리뷰 수정
          수정한 내용에 맞는 내용 점수를 계산하여 점수를 부여하거나 회수한다.
-
+         사진 글자수 다시 체크할 것
     */
     public boolean mod(EventDTO dto) {
 
@@ -120,12 +117,11 @@ public class TripleService {
         return true;
     }
 
+
     /*
        TODO: delete 리뷰 삭제
          리뷰로 부여한 점수와 보너스 점수를 회수한다.
-
     */
-
     public boolean del(EventDTO dto) {
 
         Review find_review = reviewRepository.findById(dto.getReviewid()).orElseThrow();

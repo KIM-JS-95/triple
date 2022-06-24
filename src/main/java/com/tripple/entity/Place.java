@@ -2,16 +2,16 @@ package com.tripple.entity;
 
 
 import jdk.jfr.Enabled;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,8 +21,8 @@ public class Place {
     @Column(name = "PLACE_ID", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @OneToOne(mappedBy = "place")
-    private Review review;
+    @OneToMany(mappedBy = "place", fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    private List<Review> reviews = new ArrayList<>();
 
 //    @ManyToOne
 //    @JoinColumn(name = "PLACE_ID")

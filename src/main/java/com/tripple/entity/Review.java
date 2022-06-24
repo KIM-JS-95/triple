@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(indexes = @Index(name = "review_id", columnList = "REVIEW_ID"))
 public class Review {
 
     @Id
@@ -30,10 +31,10 @@ public class Review {
     private String rating;
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "review", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.MERGE)
+    @ManyToOne
     @JoinColumn(name = "PLACE_ID")
     private Place place;
 

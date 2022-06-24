@@ -16,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(indexes = @Index(name = "user_id", columnList = "USER_ID"))
 public class User {
 
     @Id
@@ -27,12 +28,17 @@ public class User {
 
     // TODO: 연관관계 주인인 FK를 관리한다.
     @Builder.Default
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
 
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    private List<Place> places = new ArrayList<>();
+
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PointLog> pointLogs  = new ArrayList<>();
 
     // what: 리뷰 저장 시 자동 매핑
@@ -41,6 +47,9 @@ public class User {
         review.setUser(this);
     }
 
+    public void addPlace(Place place) {
+        this.places.add(place);
+    }
 
     public void addPointLog(PointLog pointLog) {
         this.pointLogs.add(pointLog);
