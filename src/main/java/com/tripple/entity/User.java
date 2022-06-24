@@ -41,6 +41,7 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PointLog> pointLogs  = new ArrayList<>();
 
+
     // what: 리뷰 저장 시 자동 매핑
     public void addReiew(Review review) {
         this.reviews.add(review);

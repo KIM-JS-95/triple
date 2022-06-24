@@ -9,11 +9,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class EventDTO {
-
-    private String action;
-
-    private String type;
+public class Converted {
 
     private UUID userid;
 
