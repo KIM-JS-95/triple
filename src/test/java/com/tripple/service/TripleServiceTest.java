@@ -49,7 +49,6 @@ class TripleServiceTest {
         List<Review> reviews = new ArrayList<>();
 
         var user = "3ede0ef2-92b7-4817-a5f3-0c575361f745";
-        var review = "240a0658-dc5f-4878-9381-ebb7b2667772";
         String place = "2e4baf1c-5acb-4efb-a1af-eddada31b00f";
 
         UUID user__UUID = UUID.fromString(user);
